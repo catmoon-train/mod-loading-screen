@@ -6,6 +6,18 @@ An advanced loading screen with the loading progress of mods. It works on all Mi
 
 Mod Loading Screen provides a Java agent, which allows opening the loading screen before even the mod loader itself loads. This feature is primarily targeted at modpack developers who want to make a seamless loading experience. The agent can be used by passing `-javaagent:mod-loading-screen-1.0.5.jar` as a JVM argument. If the agent is used, the loading screen should *not* be installed as a mod.
 
+The Java agent now also supports the packwiz update flow with progress shown on Mod Loading Screen. Agent options can be passed as a semicolon-separated string:
+
+```text
+-javaagent:mod-loading-screen-1.0.5.jar=gameDir=G:/Instances/MyPack;packwizUrl=https://example.com/pack.toml;autoUpdate=true
+```
+
+If no agent options are provided, Mod Loading Screen reads update settings from `config/mod-loading-screen/update.properties`. Legacy `.updatemod/config.json` is also merged for compatibility.
+
+To run updates, `packwiz-installer-bootstrap.jar` and `packwiz-installer.jar` should exist in the game directory. Mod Loading Screen no longer bundles these two JARs into its own output file.
+
+Update logs are written to `.updatemod/updater.log`.
+
 ## API
 
 To depend on the API, use the Modrinth Maven. The API should be JiJed, and doing so will not include Mod Loading Screen inside your mod (it will only include the API, which is only a few kilobytes). The API is designed to have both forwards and backwards binary compatibility with future Mod Loading Screen versions. An API is provided for checking which API calls will return stubs and which ones are real.

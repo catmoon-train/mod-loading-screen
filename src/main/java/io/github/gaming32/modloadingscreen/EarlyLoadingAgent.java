@@ -1,5 +1,7 @@
 package io.github.gaming32.modloadingscreen;
 
+import io.github.gaming32.modloadingscreen.update.StartupUpdateCoordinator;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
@@ -27,6 +29,7 @@ public class EarlyLoadingAgent {
         instrumentation.appendToSystemClassLoaderSearch(new JarFile(flatlafDestPath.toFile()));
 
         ActualLoadingScreen.startLoadingScreen(false);
+        StartupUpdateCoordinator.runStandalone(AgentOptions.parse(args));
         instrumentation.addTransformer(
             (loader, className, classBeingRedefined, protectionDomain, classfileBuffer) ->
                 MlsTransformers.instrumentClass(className, classfileBuffer),

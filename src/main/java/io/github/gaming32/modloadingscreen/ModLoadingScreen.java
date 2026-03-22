@@ -1,5 +1,7 @@
 package io.github.gaming32.modloadingscreen;
 
+import io.github.gaming32.modloadingscreen.update.StartupUpdateCoordinator;
+
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.LanguageAdapter;
 import net.fabricmc.loader.api.LanguageAdapterException;
@@ -67,6 +69,8 @@ public class ModLoadingScreen implements LanguageAdapter {
             ClassLoaders.defineClass(ClassLoader.getSystemClassLoader(), ACTUAL_LOADING_SCREEN.replace('/', '.'), alsData),
             "startLoadingScreen", boolean.class
         ), true);
+
+        StartupUpdateCoordinator.runWithFabricLoader();
 
         final Instrumentation instrumentation = Agents.getInstrumentation();
         instrumentation.addTransformer(

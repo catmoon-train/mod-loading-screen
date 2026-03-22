@@ -313,7 +313,7 @@ public class ActualLoadingScreen {
     public static void setTitleFromMetadata(String id, String name, String version) {
         if (titleSet || IGNORED_BUILTIN.contains(id)) return;
         titleSet = true;
-        setTitle("Loading " + name + ' ' + version);
+        setTitle("StarRailExpress " + name + ' ' + version);
     }
 
     private static void setFabricTitle() {

@@ -12,7 +12,9 @@ import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -52,7 +54,7 @@ public class ActualLoadingScreen {
     public static final Map<String, Integer> progress = new LinkedHashMap<>();
     private static final Map<String, JProgressBar> progressBars = new LinkedHashMap<>();
     private static JFrame dialog;
-    private static JLabel label;
+    private static JPanel label;
     private static JProgressBar memoryBar;
     private static DataOutputStream ipcOut;
     private static PrintStream logFile;
@@ -176,9 +178,9 @@ public class ActualLoadingScreen {
         if (fabricReady) {
             setFabricTitle();
         } else {
-            dialog.setTitle(runningOnQuilt ? "Loading Quilt Loader" : "Loading Fabric Loader");
+            dialog.setTitle(runningOnQuilt ? "Loading Quilt Loader" : "开拓星穹谋杀案");
         }
-        dialog.setResizable(false);
+        dialog.setResizable(true);
 
         try {
             dialog.setIconImage(ImageIO.read(findImageUrl("icon", "icon.png", ImageIO.getReaderFileSuffixes())));
@@ -195,7 +197,12 @@ public class ActualLoadingScreen {
             println("Failed to load background.png", e);
             background = null;
         }
-        label = new JLabel(background);
+        label = new CoverBackgroundPanel(background != null ? background.getImage() : null);
+        if (background != null) {
+            label.setPreferredSize(new Dimension(background.getIconWidth(), background.getIconHeight()));
+        } else {
+            label.setPreferredSize(new Dimension(960, 540));
+        }
         final BoxLayout layout = new BoxLayout(label, BoxLayout.Y_AXIS);
         label.setLayout(layout);
         label.add(Box.createVerticalGlue());
@@ -256,6 +263,33 @@ public class ActualLoadingScreen {
             }
         }
         return ClassLoader.getSystemResource("assets/mod-loading-screen/" + defaultFilename);
+    }
+
+    private static final class CoverBackgroundPanel extends JPanel {
+        private final Image backgroundImage;
+
+        private CoverBackgroundPanel(Image backgroundImage) {
+            this.backgroundImage = backgroundImage;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (backgroundImage == null) return;
+
+            final int width = getWidth();
+            final int height = getHeight();
+            final int imageWidth = backgroundImage.getWidth(this);
+            final int imageHeight = backgroundImage.getHeight(this);
+            if (width <= 0 || height <= 0 || imageWidth <= 0 || imageHeight <= 0) return;
+
+            final double scale = Math.max((double)width / imageWidth, (double)height / imageHeight);
+            final int drawWidth = (int)Math.ceil(imageWidth * scale);
+            final int drawHeight = (int)Math.ceil(imageHeight * scale);
+            final int drawX = (width - drawWidth) / 2;
+            final int drawY = (height - drawHeight) / 2;
+            g.drawImage(backgroundImage, drawX, drawY, drawWidth, drawHeight, this);
+        }
     }
 
     private static void startMemoryThread() {

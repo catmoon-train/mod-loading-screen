@@ -26,7 +26,16 @@ public class EarlyLoadingAgent {
             Files.copy(is, flatlafDestPath, StandardCopyOption.REPLACE_EXISTING);
         }
         System.out.println("[ModLoadingScreen] Extracted flatlaf.jar");
-        instrumentation.appendToSystemClassLoaderSearch(new JarFile(flatlafDestPath.toFile()));
+        final JarFile flatlafJar = new JarFile(flatlafDestPath.toFile());
+        try {
+            instrumentation.appendToSystemClassLoaderSearch(flatlafJar);
+        } catch (IllegalArgumentException e) {
+            System.err.println(
+                "[ModLoadingScreen] [WARN] Failed to append flatlaf.jar to system class loader; " +
+                "falling back to bootstrap class loader: " + e
+            );
+            instrumentation.appendToBootstrapClassLoaderSearch(flatlafJar);
+        }
 
         ActualLoadingScreen.startLoadingScreen(false);
         StartupUpdateCoordinator.runStandalone(AgentOptions.parse(args));

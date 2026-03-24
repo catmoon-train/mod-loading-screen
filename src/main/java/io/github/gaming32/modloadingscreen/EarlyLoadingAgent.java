@@ -32,7 +32,7 @@ public class EarlyLoadingAgent {
         } catch (IllegalArgumentException e) {
             System.err.println(
                 "[ModLoadingScreen] [WARN] Failed to append flatlaf.jar to system class loader; " +
-                "falling back to bootstrap class loader."
+                "falling back to bootstrap class loader: " + e
             );
             instrumentation.appendToBootstrapClassLoaderSearch(flatlafJar);
         }

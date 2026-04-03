@@ -14,7 +14,7 @@ The Java agent now also supports the packwiz update flow with progress shown on 
 
 If no agent options are provided, Mod Loading Screen reads update settings from `config/mod-loading-screen/update.properties`. Legacy `.updatemod/config.json` is also merged for compatibility.
 
-To run updates, `packwiz-installer-bootstrap.jar` and `packwiz-installer.jar` should exist in the game directory. Mod Loading Screen no longer bundles these two JARs into its own output file.
+The startup updater now runs the packwiz installer code in-process. You no longer need `packwiz-installer-bootstrap.jar` or `packwiz-installer.jar` in the game directory just to get update checks and progress reporting.
 
 Update logs are written to `.updatemod/updater.log`.
 

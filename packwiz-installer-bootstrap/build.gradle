@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+dependencies {
+    implementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
+    implementation 'commons-cli:commons-cli:1.4'
+    //testImplementation 'junit:junit:4.12'
+}
+
+repositories {
+    jcenter()
+}
+
+File testProjectDirectory = rootProject.getBuildDir().toPath().resolve("test-project").toFile()
+testProjectDirectory.mkdirs()
+
+application {
+    mainClassName = 'link.infra.packwiz.installer.bootstrap.Main'
+
+    // Change the working directory for the run task. Here is an example:
+    tasks.run.workingDir = testProjectDirectory
+}
+
+jar {
+    manifest {
+        attributes('Main-Class': 'link.infra.packwiz.installer.bootstrap.Main')
+    }
+}

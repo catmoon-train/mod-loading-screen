@@ -113,19 +113,7 @@ public class ActualLoadingScreen {
         loadConfig();
 
         if (ENABLE_IPC) {
-            final Path flatlafDestPath = runDir.resolve("flatlaf.jar");
             try {
-                if (fabricReady) {
-                    Files.copy(
-                        FabricLoader.getInstance()
-                            .getModContainer("mod-loading-screen")
-                            .orElseThrow(AssertionError::new)
-                            .getRootPaths().get(0)
-                            .resolve(MlsConstants.FLATLAF_PATH),
-                        flatlafDestPath, StandardCopyOption.REPLACE_EXISTING
-                    );
-                    println("Extracted flatlaf.jar");
-                }
                 final Path mlsJarPath;
                 if (fabricReady) {
                     mlsJarPath = FabricLoader.getInstance()
@@ -148,7 +136,7 @@ public class ActualLoadingScreen {
                         "-Dmlsipc.present=true",
                         "-Dmlsipc.quilt=" + runningOnQuilt,
                         "-Dmlsipc.config=" + configDir,
-                        "-cp", mlsJarPath + File.pathSeparator + flatlafDestPath,
+                        "-cp", mlsJarPath + File.pathSeparator + System.getProperty("java.class.path", ""),
                         ACTUAL_LOADING_SCREEN.replace('/', '.')
                     )
                         .redirectOutput(ProcessBuilder.Redirect.INHERIT)

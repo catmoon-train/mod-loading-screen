@@ -49,13 +49,6 @@ public class ModLoadingScreen implements LanguageAdapter {
                 .getRootPaths().get(0)
                 .toUri().toURL()
         );
-        ClassLoaders.addToSystemClassPath(
-            FabricLoader.getInstance()
-                .getModContainer("com_formdev_flatlaf")
-                .orElseThrow(AssertionError::new)
-                .getRootPaths().get(0)
-                .toUri().toURL()
-        );
 
         final byte[] alsData = Files.readAllBytes(
             FabricLoader.getInstance()

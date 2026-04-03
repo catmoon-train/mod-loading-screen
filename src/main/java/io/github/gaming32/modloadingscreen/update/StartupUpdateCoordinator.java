@@ -4,18 +4,14 @@ import io.github.gaming32.modloadingscreen.AgentOptions;
 import io.github.gaming32.modloadingscreen.MlsConstants;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 
 public final class StartupUpdateCoordinator {
     private static final AtomicBoolean STARTED = new AtomicBoolean(false);
@@ -109,81 +105,16 @@ public final class StartupUpdateCoordinator {
     }
 
     private static boolean runPackwizUpdate(Path gameDir, String packwizUrl) {
-        final Path bootstrapJar = gameDir.resolve("packwiz-installer-bootstrap.jar");
-        final Path installerJar = gameDir.resolve("packwiz-installer.jar");
-        if (!Files.isRegularFile(bootstrapJar) || !Files.isRegularFile(installerJar)) {
-            logWarn("Cannot find packwiz-installer-bootstrap.jar or packwiz-installer.jar in game dir");
-            appendLog(gameDir, "Missing updater jars: " + bootstrapJar + " and/or " + installerJar);
-            return false;
-        }
-
-        final List<String> javaCommands = JavaCommandHelper.resolveJavaCommands();
-        if (javaCommands.isEmpty()) {
-            appendLog(gameDir, "No java command candidate found");
-            return false;
-        }
-
-        for (final String javaCommand : javaCommands) {
-            final List<String> command = new ArrayList<String>();
-            command.add(javaCommand);
-            command.add("-jar");
-            command.add("packwiz-installer-bootstrap.jar");
-            command.add("--bootstrap-no-update");
-            command.add("--bootstrap-main-jar");
-            command.add("packwiz-installer.jar");
-            command.add(packwizUrl);
-            appendLog(gameDir, "Executing update command: " + command);
-            updateProgress("正在更新文件", true, 100, 60);
-
-            try {
-                final ProcessBuilder builder = new ProcessBuilder(command);
-                builder.directory(gameDir.toFile());
-                builder.redirectErrorStream(true);
-                final Process process = builder.start();
-
-                streamProcessLog(gameDir, process);
-                final int exitCode = process.waitFor();
-                appendLog(gameDir, "Update process exited with code " + exitCode + " (java=" + javaCommand + ")");
-                if (exitCode == 0) {
-                    return true;
-                }
-            } catch (IOException e) {
-                appendLog(gameDir, "IOException with java command '" + javaCommand + "': " + e.getMessage());
-                if (JavaCommandHelper.isPermissionDenied(e) && JavaCommandHelper.ensureExecutable(javaCommand)) {
-                    appendLog(gameDir, "Permission fixed for java command, retrying: " + javaCommand);
-                    try {
-                        final ProcessBuilder retryBuilder = new ProcessBuilder(command);
-                        retryBuilder.directory(gameDir.toFile());
-                        retryBuilder.redirectErrorStream(true);
-                        final Process retryProcess = retryBuilder.start();
-                        streamProcessLog(gameDir, retryProcess);
-                        if (retryProcess.waitFor() == 0) {
-                            return true;
-                        }
-                    } catch (Exception retryError) {
-                        appendLog(gameDir, "Retry failed: " + retryError.getMessage());
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                appendLog(gameDir, "Update process interrupted");
-                return false;
-            }
-        }
-        return false;
-    }
-
-    private static void streamProcessLog(Path gameDir, Process process) {
         try {
-            final BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)
-            );
-            String line;
-            while ((line = reader.readLine()) != null) {
-                appendLog(gameDir, "[packwiz] " + line);
-            }
-        } catch (IOException e) {
-            appendLog(gameDir, "Failed reading updater process output: " + e.getMessage());
+            appendLog(gameDir, "Starting embedded packwiz update for " + packwizUrl);
+            updateProgress("正在初始化更新器", true, 100, 35);
+            PackwizUpdaterBridge.runUpdate(gameDir, packwizUrl);
+            appendLog(gameDir, "Embedded packwiz update completed successfully");
+            return true;
+        } catch (Throwable t) {
+            appendLog(gameDir, "Embedded packwiz update failed: " + t.getMessage());
+            logError("Embedded packwiz update failed", t);
+            return false;
         }
     }
 
@@ -200,7 +131,7 @@ public final class StartupUpdateCoordinator {
         return Paths.get(System.getProperty("user.dir", ".")).toAbsolutePath().normalize();
     }
 
-    private static void appendLog(Path gameDir, String message) {
+    static void appendLog(Path gameDir, String message) {
         try {
             final Path logPath = gameDir.resolve(UPDATE_LOG_PATH);
             Files.createDirectories(logPath.getParent());
@@ -212,6 +143,30 @@ public final class StartupUpdateCoordinator {
             );
         } catch (IOException ignored) {
         }
+    }
+
+    static void reportPackwizProgress(Path gameDir, String message, boolean hasProgress, int progressValue, int progressTotal) {
+        final String normalizedMessage = message == null || message.trim().isEmpty() ? "正在更新文件" : message.trim();
+        if (hasProgress && progressTotal > 0) {
+            final int clampedProgress = Math.max(0, Math.min(progressValue, progressTotal));
+            final String displayMessage = '(' + Integer.toString(clampedProgress) + '/' + progressTotal + ") " + normalizedMessage;
+            appendLog(gameDir, "[packwiz] " + displayMessage);
+            updateProgress(displayMessage, false, progressTotal, clampedProgress);
+            return;
+        }
+
+        appendLog(gameDir, "[packwiz] " + normalizedMessage);
+        updateProgress(normalizedMessage, true, 100, 0);
+    }
+
+    static void reportPackwizFailure(Path gameDir, String message, Throwable throwable) {
+        appendLog(gameDir, "[packwiz] ERROR: " + message);
+        logError(message, throwable);
+    }
+
+    static void reportPackwizNotice(Path gameDir, String message) {
+        appendLog(gameDir, "[packwiz] " + message);
+        logInfo(message);
     }
 
     private static void openProgress(String title, boolean indeterminate, int max, int value) {

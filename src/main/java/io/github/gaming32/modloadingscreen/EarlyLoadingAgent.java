@@ -14,6 +14,13 @@ public class EarlyLoadingAgent {
     public static void premain(String args, Instrumentation instrumentation) throws IOException {
         System.out.println("[ModLoadingScreen] I just want to say... I'm loading *really* **extremely** early.");
         System.setProperty("mod-loading-screen.loaded", "true");
+        final AgentOptions agentOptions = AgentOptions.parse(args);
+
+        if (agentOptions.isDirectUpdate()) {
+            final int exitCode = StartupUpdateCoordinator.runStandaloneDirect(agentOptions) ? 0 : 1;
+            System.exit(exitCode);
+            return;
+        }
 
         try {
             try (InputStream is = EarlyLoadingAgent.class.getClassLoader().getResourceAsStream(MlsConstants.FLATLAF_PATH)) {
@@ -29,7 +36,7 @@ public class EarlyLoadingAgent {
         }
 
         ActualLoadingScreen.startLoadingScreen(false);
-        StartupUpdateCoordinator.runStandalone(AgentOptions.parse(args));
+        StartupUpdateCoordinator.runStandalone(agentOptions);
         instrumentation.addTransformer(
             (loader, className, classBeingRedefined, protectionDomain, classfileBuffer) ->
                 MlsTransformers.instrumentClass(className, classfileBuffer),

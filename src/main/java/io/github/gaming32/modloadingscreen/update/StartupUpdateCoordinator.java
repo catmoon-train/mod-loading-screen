@@ -31,6 +31,25 @@ public final class StartupUpdateCoordinator {
         run(gameDir, agentOptions.getPackwizUrl(), agentOptions.getAutoUpdate(), "java-agent");
     }
 
+    public static boolean runStandaloneDirect(AgentOptions agentOptions) {
+        final Path gameDir = resolveStandaloneGameDir(agentOptions.getGameDir());
+        final UpdateConfig config = UpdateConfig.load(gameDir);
+        final String packwizUrl = firstNonBlank(agentOptions.getPackwizUrl(), config.getPackwizUrl());
+
+        appendLog(gameDir, "Direct update mode started, gameDir=" + gameDir);
+        if (packwizUrl == null || packwizUrl.trim().isEmpty()) {
+            logWarn("Direct update skipped because packwizUrl is not configured");
+            appendLog(gameDir, "Direct update skipped because packwizUrl is empty");
+            return false;
+        }
+
+        final boolean updated = runPackwizUpdate(gameDir, packwizUrl.trim());
+        if (updated) {
+            VersionChecker.readLocalPackHash(gameDir).ifPresent(hash -> VersionChecker.writeCachedHash(gameDir, hash));
+        }
+        return updated;
+    }
+
     private static void run(Path gameDir, String packwizUrlOverride, Boolean autoUpdateOverride, String source) {
         if (!STARTED.compareAndSet(false, true)) {
             return;

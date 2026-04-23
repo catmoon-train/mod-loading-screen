@@ -19,7 +19,6 @@ public class EarlyLoadingAgent {
         if (agentOptions.isDirectUpdate()) {
             final int exitCode = StartupUpdateCoordinator.runStandaloneDirect(agentOptions) ? 0 : 1;
             System.exit(exitCode);
-            return;
         }
 
         try {

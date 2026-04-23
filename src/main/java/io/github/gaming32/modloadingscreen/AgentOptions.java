@@ -7,17 +7,20 @@ public final class AgentOptions {
     private final Path gameDir;
     private final String packwizUrl;
     private final Boolean autoUpdate;
+    private final boolean directUpdate;
 
-    private AgentOptions(Path gameDir, String packwizUrl, Boolean autoUpdate) {
+    private AgentOptions(Path gameDir, String packwizUrl, Boolean autoUpdate, boolean directUpdate) {
         this.gameDir = gameDir;
         this.packwizUrl = packwizUrl;
         this.autoUpdate = autoUpdate;
+        this.directUpdate = directUpdate;
     }
 
     public static AgentOptions parse(String rawArgs) {
         Path gameDir = null;
         String packwizUrl = null;
         Boolean autoUpdate = null;
+        boolean directUpdate = false;
 
         if (rawArgs != null && !rawArgs.trim().isEmpty()) {
             final String[] options = rawArgs.split(";");
@@ -35,11 +38,13 @@ public final class AgentOptions {
                     packwizUrl = value;
                 } else if ("autoUpdate".equalsIgnoreCase(key)) {
                     autoUpdate = Boolean.valueOf(Boolean.parseBoolean(value));
+                } else if ("directUpdate".equalsIgnoreCase(key)) {
+                    directUpdate = Boolean.parseBoolean(value);
                 }
             }
         }
 
-        return new AgentOptions(gameDir, packwizUrl, autoUpdate);
+        return new AgentOptions(gameDir, packwizUrl, autoUpdate, directUpdate);
     }
 
     public Path getGameDir() {
@@ -52,5 +57,9 @@ public final class AgentOptions {
 
     public Boolean getAutoUpdate() {
         return autoUpdate;
+    }
+
+    public boolean isDirectUpdate() {
+        return directUpdate;
     }
 }

@@ -12,6 +12,12 @@ The Java agent now also supports the packwiz update flow with progress shown on 
 -javaagent:mod-loading-screen-1.0.5.jar=gameDir=G:/Instances/MyPack;packwizUrl=https://example.com/pack.toml;autoUpdate=true
 ```
 
+Add `directUpdate=true` to run only the embedded updater and then exit the JVM. This is disabled by default and is useful for headless/Linux Docker update jobs:
+
+```text
+-javaagent:mod-loading-screen-1.0.5.jar=gameDir=/data/modpack;packwizUrl=https://example.com/pack.toml;directUpdate=true
+```
+
 If no agent options are provided, Mod Loading Screen reads update settings from `config/mod-loading-screen/update.properties`. Legacy `.updatemod/config.json` is also merged for compatibility.
 
 The startup updater now runs the packwiz installer code in-process. You no longer need `packwiz-installer-bootstrap.jar` or `packwiz-installer.jar` in the game directory just to get update checks and progress reporting.
